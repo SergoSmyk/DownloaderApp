@@ -1,9 +1,9 @@
 package com.sergo_smyk.downloader.db.model
 
 import androidx.room.Entity
-import com.sergo_smyk.downloader.api.DownloadRequest
 import com.sergo_smyk.downloader.api.DownloadItem
 import com.sergo_smyk.downloader.api.DownloadReason
+import com.sergo_smyk.downloader.api.DownloadRequest
 import com.sergo_smyk.downloader.api.DownloadStatus
 import com.sergo_smyk.downloader.model.SimpleDownloadItem
 
@@ -20,6 +20,8 @@ internal data class DBItem(
     val progress: Float,
     val status: Int,
     val reason: Int,
+    val savePath: String,
+    val fileName: String
 ) {
     fun toDownloadItem(): DownloadItem {
         return SimpleDownloadItem(
@@ -43,7 +45,9 @@ internal data class DBItem(
                 totalSize = 0,
                 progress = 0f,
                 status = DownloadStatus.STATUS_UNKNOWN.code,
-                reason = DownloadReason.NONE.code
+                reason = DownloadReason.NONE.code,
+                savePath = request.savePath,
+                fileName = request.fileName
             )
         }
     }
