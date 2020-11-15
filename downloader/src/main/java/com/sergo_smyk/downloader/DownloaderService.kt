@@ -166,8 +166,8 @@ internal class DownloaderService : Service() {
                         downloaded.toDownloadItem()
                     )
                 }
-                downloadDbDao.updateStatus(downloaded.downloadId, DownloadStatus.STATUS_SAVED.code)
             }
+            downloadDbDao.updateStatus(downloaded.downloadId, DownloadStatus.STATUS_SAVED.code)
         }
     }
 
