@@ -1,11 +1,14 @@
-package com.sergo_smyk.downloader
+package com.sergo_smyk.downloader.api
 
 import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class DownloadRequest(
-        val name: String,
+        val appId: String,
+        val title: String = "",
+        val description: String = "",
         val link: String,
+        val fileName: String,
         val savePath: String
 ): Parcelable

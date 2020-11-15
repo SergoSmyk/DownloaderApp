@@ -1,9 +1,11 @@
 package com.sergo_smyk.downloader.api
 
-import com.sergo_smyk.downloader.DownloadRequest
+import kotlinx.coroutines.flow.Flow
 
 interface Downloader {
-    fun download(name: String, link: String, savePath: String)
-
     fun download(request: DownloadRequest)
+
+    suspend fun observe(requestId: String): Flow<DownloadItem>
+
+    suspend fun getStatus(requestId: String): DownloadItem?
 }

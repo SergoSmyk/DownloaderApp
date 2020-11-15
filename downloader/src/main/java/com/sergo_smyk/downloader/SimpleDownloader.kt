@@ -1,40 +1,32 @@
 package com.sergo_smyk.downloader
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.net.Uri
-import android.os.Bundle
-import android.os.IBinder
+import android.app.Application
 import com.sergo_smyk.downloader.api.DownloadItem
+import com.sergo_smyk.downloader.api.DownloadRequest
 import com.sergo_smyk.downloader.api.Downloader
+import com.sergo_smyk.downloader.db.DownloadsDatabase
+import com.sergo_smyk.downloader.db.dao.DownloaderDao
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 
-class SimpleDownloader(
-        private val context: Context
-) : Downloader {
+class SimpleDownloader(private val application: Application) : Downloader {
 
-    override fun download(name: String, link: String, savePath: String) {
-        val request = DownloadRequest(
-                name = name,
-                link = link,
-                savePath = savePath
-        )
-
-        download(request)
-    }
+    private val dao: DownloaderDao
+        get() = DownloadsDatabase.getOrCreate(application).downloaderDao()
 
     override fun download(request: DownloadRequest) {
-        val uri = Uri.parse(request.link)
-        val intent = DownloadService.buildIntent(request)
-        context.bindService(intent, object: ServiceConnection {
-            override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
+        val intent = DownloaderService.buildIntent(application, request)
+        application.startService(intent)
+    }
 
-            }
+    override suspend fun observe(requestId: String): Flow<DownloadItem> {
+        return dao.observeItem(requestId)
+            .filterNotNull()
+            .map { it.toDownloadItem() }
+    }
 
-            override fun onServiceDisconnected(name: ComponentName?) {
-
-            }
-        }, )
+    override suspend fun getStatus(requestId: String): DownloadItem? {
+        return dao.getItemByAppId(requestId)?.toDownloadItem()
     }
 }
