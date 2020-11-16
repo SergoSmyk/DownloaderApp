@@ -36,8 +36,8 @@ class SimpleDownloader(private val application: Application) : Downloader {
         dao.getItemByAppId(requestId)?.let { item ->
             ContextCompat.getSystemService(application, DownloadManager::class.java)!!
                 .remove(item.downloadId)
-            dao.deleteByAppId(requestId)
             DownloaderService.getDownloadedFile(application, item)?.delete()
+            dao.deleteByAppId(requestId)
         }
     }
 }
