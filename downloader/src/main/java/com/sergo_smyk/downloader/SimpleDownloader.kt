@@ -1,6 +1,8 @@
 package com.sergo_smyk.downloader
 
 import android.app.Application
+import android.app.DownloadManager
+import androidx.core.content.ContextCompat
 import com.sergo_smyk.downloader.api.DownloadItem
 import com.sergo_smyk.downloader.api.DownloadRequest
 import com.sergo_smyk.downloader.api.Downloader
@@ -28,5 +30,14 @@ class SimpleDownloader(private val application: Application) : Downloader {
 
     override suspend fun getStatus(requestId: String): DownloadItem? {
         return dao.getItemByAppId(requestId)?.toDownloadItem()
+    }
+
+    override suspend fun removeItemFromDownloader(requestId: String) {
+        dao.getItemByAppId(requestId)?.let { item ->
+            ContextCompat.getSystemService(application, DownloadManager::class.java)!!
+                .remove(item.downloadId)
+            dao.deleteByAppId(requestId)
+            DownloaderService.getDownloadedFile(application, item)?.delete()
+        }
     }
 }

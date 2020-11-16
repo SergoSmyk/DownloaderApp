@@ -8,4 +8,6 @@ interface Downloader {
     suspend fun observe(requestId: String): Flow<DownloadItem>
 
     suspend fun getStatus(requestId: String): DownloadItem?
+
+    suspend fun removeItemFromDownloader(requestId: String)
 }

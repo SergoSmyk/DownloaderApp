@@ -1,17 +1,16 @@
 package com.sergo_smyk.downloader.db.model
 
 import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.sergo_smyk.downloader.api.DownloadItem
 import com.sergo_smyk.downloader.api.DownloadReason
 import com.sergo_smyk.downloader.api.DownloadRequest
 import com.sergo_smyk.downloader.api.DownloadStatus
 import com.sergo_smyk.downloader.model.SimpleDownloadItem
 
-@Entity(
-    tableName = "item",
-    primaryKeys = ["appId", "downloadId"]
-)
+@Entity(tableName = "item")
 internal data class DBItem(
+    @PrimaryKey
     val appId: String,
     val downloadId: Long,
     val title: String,

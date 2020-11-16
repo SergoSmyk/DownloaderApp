@@ -26,6 +26,8 @@ internal class DownloaderService : Service() {
     private val cursorReader = DMCursorReader()
 
     private var serviceScope: CoroutineScope? = null
+    private var observeJob: Job? = null
+
     private lateinit var downloadManager: DownloadManager
     private lateinit var downloadDbDao: DownloaderDao
 
@@ -85,10 +87,11 @@ internal class DownloaderService : Service() {
 
     private fun checkRequest(request: DownloadRequest) {
         serviceScope?.launch(Dispatchers.IO) {
-            if (downloadDbDao.getItemByAppId(request.appId) == null) {
-                createDownload(request)
-            } else {
-                createDownloadsObserver()
+            val itemInDb = downloadDbDao.getItemByAppId(request.appId)
+            when {
+                itemInDb == null -> createDownload(request)
+                request.isReloadRequired -> reloadDownload(itemInDb, request)
+                else -> createDownloadsObserver()
             }
         }
     }
@@ -102,7 +105,11 @@ internal class DownloaderService : Service() {
         }
     }
 
-    private var observeJob: Job? = null
+    private fun reloadDownload(item: DBItem, request: DownloadRequest) {
+        downloadManager.remove(item.downloadId)
+        getDownloadedFile(applicationContext, item)?.delete()
+        createDownload(request)
+    }
 
     private fun createDownloadsObserver() {
         observeJob?.cancel()
@@ -159,7 +166,7 @@ internal class DownloaderService : Service() {
     private suspend fun saveDownloadedFiles() {
         downloadDbDao.getAllDownloaded().forEach { downloaded ->
             downloaderApplication.provideSaver()?.let { saver ->
-                getDownloadedFile(downloaded)?.let { downloadedFile ->
+                getDownloadedFile(applicationContext, downloaded)?.let { downloadedFile ->
                     saver.saveFileToOtherPlace(
                         application,
                         downloadedFile,
@@ -169,12 +176,6 @@ internal class DownloaderService : Service() {
             }
             downloadDbDao.updateStatus(downloaded.downloadId, DownloadStatus.STATUS_SAVED.code)
         }
-    }
-
-    private fun getDownloadedFile(item: DBItem): File? {
-        val appDir = applicationContext.getExternalFilesDir(null)
-        val fileDir = File(appDir, item.savePath)
-        return File(fileDir, item.fileName)
     }
 
     companion object {
@@ -191,6 +192,15 @@ internal class DownloaderService : Service() {
                     putParcelable(DOWNLOAD_REQUEST, request)
                 })
             }
+        }
+
+        internal fun getDownloadedFile(context: Context, item: DBItem): File? {
+            val appDir = context.getExternalFilesDir(null)
+            val fileDir = File(appDir, item.savePath)
+            val file = File(fileDir, item.fileName)
+            return if (file.exists()) {
+                file
+            } else null
         }
     }
 }

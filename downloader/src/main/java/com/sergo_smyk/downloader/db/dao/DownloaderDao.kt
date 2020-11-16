@@ -1,9 +1,6 @@
 package com.sergo_smyk.downloader.db.dao
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.sergo_smyk.downloader.api.DownloadStatus
 import com.sergo_smyk.downloader.db.model.DBItem
 import kotlinx.coroutines.flow.Flow
@@ -45,4 +42,7 @@ internal interface DownloaderDao {
 
     @Query("SELECT status FROM item")
     fun getAllStatuses(): List<Int>
+
+    @Query("DELETE FROM item WHERE appId = :appId")
+    fun deleteByAppId(appId: String)
 }

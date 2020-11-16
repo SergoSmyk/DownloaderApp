@@ -10,5 +10,6 @@ data class DownloadRequest(
         val description: String = "",
         val link: String,
         val fileName: String,
-        val savePath: String
+        val savePath: String,
+        val isReloadRequired: Boolean = true
 ): Parcelable
