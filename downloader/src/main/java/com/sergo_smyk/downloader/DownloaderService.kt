@@ -12,7 +12,8 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
 import com.sergo_smyk.downloader.api.DownloadRequest
 import com.sergo_smyk.downloader.api.DownloadStatus
-import com.sergo_smyk.downloader.api.DownloaderApplication
+import com.sergo_smyk.downloader.api.NotificationMaker
+import com.sergo_smyk.downloader.api.Saver
 import com.sergo_smyk.downloader.db.DownloadsDatabase
 import com.sergo_smyk.downloader.db.dao.DownloaderDao
 import com.sergo_smyk.downloader.db.model.DBItem
@@ -21,7 +22,7 @@ import com.sergo_smyk.downloader.tools.ServiceHelper
 import kotlinx.coroutines.*
 import java.io.File
 
-internal class DownloaderService : Service() {
+abstract class DownloaderService : Service() {
 
     private val cursorReader = DMCursorReader()
 
@@ -31,10 +32,9 @@ internal class DownloaderService : Service() {
     private lateinit var downloadManager: DownloadManager
     private lateinit var downloadDbDao: DownloaderDao
 
-    private val downloaderApplication: DownloaderApplication
-        get() = (application as? DownloaderApplication) ?: run {
-            throw NullPointerException("Application isn't instance of DownloadApplication")
-        }
+    abstract fun provideNotificationMaker(): NotificationMaker
+
+    open fun provideSaver(): Saver? = null
 
     override fun onCreate() {
         Log.d(TAG, "onCreate")
@@ -66,7 +66,7 @@ internal class DownloaderService : Service() {
     }
 
     private fun startForeground() {
-        with(downloaderApplication.provideNotificationMaker()) {
+        with(provideNotificationMaker()) {
             startForeground(
                 getId(),
                 makeFoundation(application)
@@ -165,7 +165,7 @@ internal class DownloaderService : Service() {
 
     private suspend fun saveDownloadedFiles() {
         downloadDbDao.getAllDownloaded().forEach { downloaded ->
-            downloaderApplication.provideSaver()?.let { saver ->
+            provideSaver()?.let { saver ->
                 getDownloadedFile(applicationContext, downloaded)?.let { downloadedFile ->
                     saver.saveFileToOtherPlace(
                         application,
@@ -186,8 +186,8 @@ internal class DownloaderService : Service() {
 
         private const val DOWNLOAD_REQUEST = "download_item_extra"
 
-        fun buildIntent(context: Context, request: DownloadRequest): Intent {
-            return Intent(context, DownloaderService::class.java).apply {
+        fun <T: DownloaderService> buildIntent(context: Context, request: DownloadRequest, clazz: Class<T>): Intent {
+            return Intent(context, clazz).apply {
                 putExtras(Bundle().apply {
                     putParcelable(DOWNLOAD_REQUEST, request)
                 })

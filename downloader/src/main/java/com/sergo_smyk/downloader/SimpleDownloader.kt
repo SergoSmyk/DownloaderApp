@@ -12,13 +12,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 
-class SimpleDownloader(private val application: Application) : Downloader {
+class SimpleDownloader<T: DownloaderService>(
+    private val application: Application,
+    private val serviceClass: Class<T>
+    ) : Downloader {
 
     private val dao: DownloaderDao
         get() = DownloadsDatabase.getOrCreate(application).downloaderDao()
 
     override fun download(request: DownloadRequest) {
-        val intent = DownloaderService.buildIntent(application, request)
+        val intent = DownloaderService.buildIntent(application, request, serviceClass)
         application.startService(intent)
     }
 

@@ -8,5 +8,4 @@ interface NotificationMaker {
     fun getId(): Int
 
     fun makeFoundation(application: Application): NotificationCompat.Builder
-
 }

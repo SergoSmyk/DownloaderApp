@@ -28,7 +28,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater).apply {
             setContentView(this.root)
         }
-        downloader = SimpleDownloader(application)
+        downloader = SimpleDownloader(application, MyService::class.java)
         setupLogic()
     }
 
